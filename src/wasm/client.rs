@@ -1,8 +1,10 @@
 use http::Method;
 use js_sys::Uint8Array;
 use std::future::Future;
-use wasm_bindgen::UnwrapThrowExt as _;
 use url::Url;
+use wasm_bindgen::JsCast;
+use wasm_bindgen::UnwrapThrowExt as _;
+use web_sys::{WorkerGlobalScope};
 
 use super::{Request, RequestBuilder, Response};
 use crate::IntoUrl;
@@ -143,16 +145,15 @@ async fn fetch(req: Request) -> crate::Result<Response> {
         .map_err(crate::error::builder)?;
 
     // Await the fetch() promise
-    let p = web_sys::window()
-        .expect("window should exist")
+    let p = js_sys::global()
+        .unchecked_into::<web_sys::WorkerGlobalScope>()
         .fetch_with_request(&js_req);
     let js_resp = super::promise::<web_sys::Response>(p)
         .await
         .map_err(crate::error::request)?;
 
     // Convert from the js Response
-    let mut resp = http::Response::builder()
-        .status(js_resp.status());
+    let mut resp = http::Response::builder().status(js_resp.status());
 
     let url = Url::parse(&js_resp.url()).expect_throw("url parse");
 
