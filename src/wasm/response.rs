@@ -16,6 +16,10 @@ pub struct Response {
     url: Box<Url>,
 }
 
+//TEMPORARY: ONLY WHILST WASM IS SINGLE THREADED, IS NOT SAFE FOR MULTI THREADED SCENARIOS
+unsafe impl Send for Response {}
+unsafe impl Sync for Response {}
+
 impl Response {
     pub(super) fn new(
         res: http::Response<web_sys::Response>,
